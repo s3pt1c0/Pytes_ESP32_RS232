@@ -4,6 +4,7 @@ substitutions:
   poll_s: "30"
   capacity_ah: "100"
   num_batts: "6"
+  version: 1.3.8
   device_description: "Pytes Monitor RS-232"
 
 esphome:
@@ -22,11 +23,8 @@ esp32:
 # Ejecutar via SSH "mkdir -p /config/esphome/components/pytes_rs232"
 external_components:
   - source:
-      type: git
-      url: https://github.com/s3pt1c0/Pytes_ESP32_RS232
-      ref: main
-    components: [ pytes_rs232 ]
-    refresh: 1d
+      type: local
+      path: components
 
 logger:
   level: INFO
@@ -37,17 +35,44 @@ web_server:
 # API de Home Assistant
 api:
   encryption:
-    key: "yourkey="
+    key: "Your key"
 
 # OTA
 ota:
   - platform: esphome
-    password: "your-password"
+    password: "Your Password"
+  - platform: web_server
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
+# ============================================
+# NTP TIME SYNC - AST -4
+# ============================================
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: AST4
+    servers:
+      - time.google.com
+    update_interval: 4h
+    on_time_sync:
+      then:
+        - logger.log: "Time synchronized with NTP server"
+
+# ============================================
+# I2C - BME280 (Temp/Press/Hum)
+# ============================================
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  frequency: 100kHz
+
+# ============================================
+# UART - MAX3232 (RS-232)
+# ============================================
 uart:
   id: uart_pytes
   tx_pin: GPIO17
@@ -59,7 +84,47 @@ uart:
 
 # ---------- SENSORS ----------
 sensor:
-  # Summary
+  # ============================================
+  # BME280 - Temperatura/Presión/Humedad Ambiente
+  # ============================================
+  - platform: bme280_i2c
+    temperature:
+      name: "🌡️ Ambient Temperature"
+      id: ambient_temp_f
+      unit_of_measurement: "°F"
+      accuracy_decimals: 1
+      oversampling: 16x
+      filters:
+        # C -> F
+        - lambda: return (x * 9.0 / 5.0) + 32.0;
+    pressure:
+      name: "🌀 Ambient Pressure"
+      id: ambient_pressure_inhg
+      unit_of_measurement: "inHg"
+      accuracy_decimals: 2
+      filters:
+        # hPa -> inHg (1 hPa = 0.0295299830714 inHg)
+        - lambda: return x * 0.0295299830714;
+    humidity:
+      name: "💧 Ambient Humidity"
+      id: ambient_humidity
+    address: 0x76 
+    update_interval: 60s
+
+  - platform: uptime
+    id: uptime_seconds
+    internal: true
+    update_interval: 60s
+
+  - platform: wifi_signal
+    name: "WiFi RSSI📶"
+    id: wifi_rssi
+    unit_of_measurement: "dBm"
+    accuracy_decimals: 0
+    update_interval: 60s
+    entity_category: diagnostic
+    
+# ---------- SENSORS ----------
   - platform: template
     name: "Bank Voltage ⚠️"
     id: sys_voltage
@@ -78,7 +143,6 @@ sensor:
     unit_of_measurement: "°F"
     accuracy_decimals: 1
 
-  # Esto es SOC% (0-100). Lo dejamos con el nombre “coulomb” como tú lo estabas usando.
   - platform: template
     name: "Bank SoC📈"
     id: sys_coulomb
@@ -324,6 +388,75 @@ text_sensor:
   - platform: template
     name: "B6 Volt Status📊"
     id: b6_volt_status
+
+# ----------------------------
+# DIAGNOSTIC
+# ----------------------------
+
+  # ----------------------------
+  # ESP32 - Uptime readable
+  # ----------------------------
+  - platform: template
+    name: "Uptime🕓"
+    icon: mdi:clock-start
+    entity_category: diagnostic
+    update_interval: 60s
+    lambda: |-
+      int seconds = (int)id(uptime_seconds).state;
+      int days = seconds / 86400;
+      int hours = (seconds % 86400) / 3600;
+      int minutes = (seconds % 3600) / 60;
+      int secs = seconds % 60;
+
+      std::string result = "";
+      if (days > 0) result += to_string(days) + "d ";
+      if (hours > 0) result += to_string(hours) + "h ";
+      if (minutes > 0) result += to_string(minutes) + "m ";
+      result += to_string(secs) + "s";
+
+      return result;
+
+  - platform: template
+    name: "Date🗓️"
+    icon: mdi:calendar-clock
+    entity_category: diagnostic
+    update_interval: 60s
+    lambda: |-
+      auto time = id(sntp_time).now();
+      if (!time.is_valid()) {
+        return {"Syncing..."};
+      }
+
+      int month = time.month;
+      int day = time.day_of_month;
+      int year = time.year;
+      int hour = time.hour;
+      int minute = time.minute;
+
+      std::string am_pm = "am";
+      int hour_12 = hour;
+
+      if (hour == 0) {
+        hour_12 = 12;
+      } else if (hour == 12) {
+        am_pm = "pm";
+      } else if (hour > 12) {
+        hour_12 = hour - 12;
+        am_pm = "pm";
+      }
+
+      char buffer[30];
+      snprintf(buffer, sizeof(buffer), "%d/%d/%d %d:%02d %s",
+               month, day, year, hour_12, minute, am_pm.c_str());
+
+      return {buffer};
+
+  - platform: template
+    name: "ESP32 Code Version⚙️"
+    entity_category: diagnostic
+    lambda: |-
+      return {"${version}"};
+
 
 # ---------- External component config ----------
 pytes_rs232:
