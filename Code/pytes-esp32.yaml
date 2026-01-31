@@ -1,0 +1,398 @@
+substitutions:
+  device_name: pytes-esp32
+  friendly_name: 🔋Pytes RS232🔋
+  poll_s: "30"
+  capacity_ah: "100"
+  num_batts: "6"
+  device_description: "Pytes Monitor RS-232"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  comment: ${device_description}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+    advanced: 
+      minimum_chip_revision: "3.1"
+
+# ESPHome 2025.12+ : custom_component removed -> use external component
+# Ejecutar via SSH "mkdir -p /config/esphome/components/pytes_rs232"
+external_components:
+  - source:
+      type: local
+      path: components
+
+logger:
+  level: INFO
+
+web_server:
+  port: 80  
+
+# API de Home Assistant
+api:
+  encryption:
+    key: "yourkey="
+
+# OTA
+ota:
+  - platform: esphome
+    password: "your-password"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+uart:
+  id: uart_pytes
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 115200
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+
+# ---------- SENSORS ----------
+sensor:
+  # Summary
+  - platform: template
+    name: "Bank Voltage ⚠️"
+    id: sys_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+
+  - platform: template
+    name: "Bank Current⚡"
+    id: sys_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+
+  - platform: template
+    name: "Bank Temp🌡️"
+    id: sys_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+
+  # Esto es SOC% (0-100). Lo dejamos con el nombre “coulomb” como tú lo estabas usando.
+  - platform: template
+    name: "Bank SoC📈"
+    id: sys_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+  # ---- Battery 1 ----
+  - platform: template
+    name: "B1 Volt⚠️"
+    id: b1_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B1 Current⚡"
+    id: b1_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B1 Temp🌡️"
+    id: b1_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+  - platform: template
+    name: "B1 SoC📈"
+    id: b1_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+# ---- Battery 2 ----
+  - platform: template
+    name: "B2 Volt⚠️"
+    id: b2_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B2 Current⚡"
+    id: b2_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B2 Temp🌡️"
+    id: b2_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+  - platform: template
+    name: "B2 SoC📈"
+    id: b2_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+  # ---- Battery 3 ----
+  - platform: template
+    name: "B3 Volt⚠️"
+    id: b3_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B3 Current⚡"
+    id: b3_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B3 Temp🌡️"
+    id: b3_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+  - platform: template
+    name: "B3 SoC📈"
+    id: b3_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+  # ---- Battery 4 ----
+  - platform: template
+    name: "B4 Volt⚠️"
+    id: b4_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B4 Current⚡"
+    id: b4_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B4 Temp🌡️"
+    id: b4_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+  - platform: template
+    name: "B4 SoC📈"
+    id: b4_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+  # ---- Battery 5 ----
+  - platform: template
+    name: "B5 Volt⚠️"
+    id: b5_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B5 Current⚡"
+    id: b5_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B5 Temp🌡️"
+    id: b5_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+  - platform: template
+    name: "B5 SoC📈"
+    id: b5_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+  # ---- Battery 6 ----
+  - platform: template
+    name: "B6 Volt⚠️"
+    id: b6_voltage
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B6 Current⚡"
+    id: b6_current
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+  - platform: template
+    name: "B6 Temp🌡️"
+    id: b6_temp_f
+    unit_of_measurement: "°F"
+    accuracy_decimals: 1
+  - platform: template
+    name: "B6 SoC📈"
+    id: b6_coulomb
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+text_sensor:
+  # Summary status
+  - platform: template
+    name: "Bank Status🚥"
+    id: sys_basic_status
+
+  # Battery 1
+  - platform: template
+    name: "B1 Serial#️⃣"
+    id: b1_barcode
+  - platform: template
+    name: "B1 Model🆔"
+    id: b1_devtype
+  - platform: template
+    name: "B1 Firmware⚙️"
+    id: b1_firmver
+  - platform: template
+    name: "B1 Status🚥"
+    id: b1_basic_status
+  - platform: template
+    name: "B1 Volt Status📊"
+    id: b1_volt_status
+
+  # Battery 2
+  - platform: template
+    name: "B2 Serial#️⃣"
+    id: b2_barcode
+  - platform: template
+    name: "B2 Model🆔"
+    id: b2_devtype
+  - platform: template
+    name: "B2 Firmware⚙️"
+    id: b2_firmver
+  - platform: template
+    name: "B2 Status🚥"
+    id: b2_basic_status
+  - platform: template
+    name: "B2 Volt Status📊"
+    id: b2_volt_status
+
+  # Battery 3
+  - platform: template
+    name: "B3 Serial#️⃣"
+    id: b3_barcode
+  - platform: template
+    name: "B3 Model🆔"
+    id: b3_devtype
+  - platform: template
+    name: "B3 Firmware⚙️"
+    id: b3_firmver
+  - platform: template
+    name: "B3 Status🚥"
+    id: b3_basic_status
+  - platform: template
+    name: "B3 Volt Status📊"
+    id: b3_volt_status
+
+  # Battery 4
+  - platform: template
+    name: "B4 Serial#️⃣"
+    id: b4_barcode
+  - platform: template
+    name: "B4 Model🆔"
+    id: b4_devtype
+  - platform: template
+    name: "B4 Firmware⚙️"
+    id: b4_firmver
+  - platform: template
+    name: "B4 Status🚥"
+    id: b4_basic_status
+  - platform: template
+    name: "B4 Volt Status📊"
+    id: b4_volt_status
+
+  # Battery 5
+  - platform: template
+    name: "B5 Serial#️⃣"
+    id: b5_barcode
+  - platform: template
+    name: "B5 Model🆔"
+    id: b5_devtype
+  - platform: template
+    name: "B5 Firmware⚙️"
+    id: b5_firmver
+  - platform: template
+    name: "B5 Status🚥"
+    id: b5_basic_status
+  - platform: template
+    name: "B5 Volt Status📊"
+    id: b5_volt_status
+
+  # Battery 6
+  - platform: template
+    name: "B6 Serial#️⃣"
+    id: b6_barcode
+  - platform: template
+    name: "B6 Model🆔"
+    id: b6_devtype
+  - platform: template
+    name: "B6 Firmware⚙️"
+    id: b6_firmver
+  - platform: template
+    name: "B6 Status🚥"
+    id: b6_basic_status
+  - platform: template
+    name: "B6 Volt Status📊"
+    id: b6_volt_status
+
+# ---------- External component config ----------
+pytes_rs232:
+  uart_id: uart_pytes
+  num_batteries: ${num_batts}
+  update_interval: ${poll_s}s
+  capacity_ah: ${capacity_ah}
+
+  summary:
+    voltage: sys_voltage
+    current: sys_current
+    temperature: sys_temp_f
+    coulomb: sys_coulomb
+    basic_status: sys_basic_status
+
+  batteries:
+    - voltage: b1_voltage
+      current: b1_current
+      temperature: b1_temp_f
+      coulomb: b1_coulomb   # puedes usar "soc:" también, es alias
+      barcode: b1_barcode
+      devtype: b1_devtype
+      firm_version: b1_firmver
+      basic_status: b1_basic_status
+      volt_status: b1_volt_status
+
+    - voltage: b2_voltage
+      current: b2_current
+      temperature: b2_temp_f
+      coulomb: b2_coulomb
+      barcode: b2_barcode
+      devtype: b2_devtype
+      firm_version: b2_firmver
+      basic_status: b2_basic_status
+      volt_status: b2_volt_status
+
+    - voltage: b3_voltage
+      current: b3_current
+      temperature: b3_temp_f
+      coulomb: b3_coulomb
+      barcode: b3_barcode
+      devtype: b3_devtype
+      firm_version: b3_firmver
+      basic_status: b3_basic_status
+      volt_status: b3_volt_status
+
+    - voltage: b4_voltage
+      current: b4_current
+      temperature: b4_temp_f
+      coulomb: b4_coulomb
+      barcode: b4_barcode
+      devtype: b4_devtype
+      firm_version: b4_firmver
+      basic_status: b4_basic_status
+      volt_status: b4_volt_status
+
+    - voltage: b5_voltage
+      current: b5_current
+      temperature: b5_temp_f
+      coulomb: b5_coulomb
+      barcode: b5_barcode
+      devtype: b5_devtype
+      firm_version: b5_firmver
+      basic_status: b5_basic_status
+      volt_status: b5_volt_status
+
+    - voltage: b6_voltage
+      current: b6_current
+      temperature: b6_temp_f
+      coulomb: b6_coulomb
+      barcode: b6_barcode
+      devtype: b6_devtype
+      firm_version: b6_firmver
+      basic_status: b6_basic_status
+      volt_status: b6_volt_status
